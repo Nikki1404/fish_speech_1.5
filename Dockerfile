@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1.7
+
 FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+
 
 ENV http_proxy="http://163.116.128.80:8080"
 ENV https_proxy="http://163.116.128.80:8080"
@@ -32,20 +34,65 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-RUN git clone --branch v1.5.1 --depth 1 \
+RUN git clone \
+    --branch v1.5.1 \
+    --depth 1 \
     https://github.com/fishaudio/fish-speech.git \
     /app/fish-speech
 
 WORKDIR /app/fish-speech
 
 RUN python3.10 -m venv /app/.venv
+
 ENV PATH="/app/.venv/bin:${PATH}"
 
-RUN python -m pip install --upgrade pip setuptools wheel && \
-    python -m pip install --no-cache-dir -e ".[stable]"
+RUN python -m pip install --upgrade \
+    pip \
+    setuptools \
+    wheel
+
+# Install a mutually compatible Torch stack for CUDA 12.4.
+RUN python -m pip install \
+    --no-cache-dir \
+    torch==2.4.1 \
+    torchvision==0.19.1 \
+    torchaudio==2.4.1 \
+    --index-url https://download.pytorch.org/whl/cu124
+
+# Keep later dependency installation from replacing the CUDA 12.4 wheels.
+RUN printf '%s\n' \
+    'torch==2.4.1' \
+    'torchvision==0.19.1' \
+    'torchaudio==2.4.1' \
+    > /app/pytorch-constraints.txt
+
+RUN python -m pip install \
+    --no-cache-dir \
+    --constraint /app/pytorch-constraints.txt \
+    -e ".[stable]"
 
 COPY requirements.txt /app/requirements.txt
-RUN python -m pip install --no-cache-dir -r /app/requirements.txt
+
+RUN python -m pip install \
+    --no-cache-dir \
+    --constraint /app/pytorch-constraints.txt \
+    -r /app/requirements.txt
+
+# Verify the Torch stack during the image build.
+RUN python - <<'PY'
+import torch
+import torchaudio
+import torchvision
+
+print("torch:", torch.__version__)
+print("torch CUDA:", torch.version.cuda)
+print("torchaudio:", torchaudio.__version__)
+print("torchvision:", torchvision.__version__)
+
+assert torch.__version__.startswith("2.4.1")
+assert torchaudio.__version__.startswith("2.4.1")
+assert torch.version.cuda == "12.4"
+PY
 
 ARG MODEL_REPO=fishaudio/fish-speech-1.5
 ARG MODEL_REVISION=main
@@ -74,4 +121,5 @@ ENV DEVICE=cuda \
 EXPOSE 8000
 
 ENTRYPOINT []
+
 CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
