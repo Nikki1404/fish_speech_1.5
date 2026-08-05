@@ -1,0 +1,12 @@
+.git
+.gitignore
+.venv
+.client-venv
+__pycache__
+*.pyc
+*.pyo
+*.wav
+*.mp3
+*.log
+output
+checkpoints
