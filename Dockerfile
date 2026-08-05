@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1.7
-
 FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+
+ENV http_proxy="http://163.116.128.80:8080"
+ENV https_proxy="http://163.116.128.80:8080"
 
 USER root
 
