@@ -9,7 +9,7 @@ Endpoints:
 ## Build
 
 ```bash
-DOCKER_BUILDKIT=1 docker build --progress=plain -t fish-speech-15:latest .
+DOCKER_BUILDKIT=1 docker build --progress=plain -t fish-speech-1.5:latest .
 ```
 
 ## Run
@@ -24,7 +24,7 @@ docker run -d \
   -e DEVICE=cuda \
   -e HALF=1 \
   -e COMPILE=0 \
-  fish-speech-15:latest
+  fish-speech-1.5:latest
 ```
 
 ## Logs and health
