@@ -13,8 +13,19 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        git curl ca-certificates build-essential ffmpeg libsndfile1 \
-        python3.10 python3.10-dev python3.10-venv python3-pip && \
+        git \
+        curl \
+        ca-certificates \
+        build-essential \
+        ffmpeg \
+        libsndfile1 \
+        libsndfile1-dev \
+        portaudio19-dev \
+        libasound2-dev \
+        python3.10 \
+        python3.10-dev \
+        python3.10-venv \
+        python3-pip && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
